@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
@@ -47,13 +48,18 @@ Route::get('/public-info', function () {
 });
 
 //Route::middleware('auth:sanctum')->post('/products', [ProductController::class, 'store']);
-Route::post('/products', [ProductController::class, 'store']);
-Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
+
+// Product Routes
+Route::get('/products', [ProductController::class, 'index']);       // List all products
+Route::get('/products/{id}', [ProductController::class, 'show']);   // Show single product
+Route::post('/products', [ProductController::class, 'store']);      // Create new product
+Route::put('/products/{id}', [ProductController::class, 'update']); // Update product
+Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete product
 
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::post('/categories', [CategoryController::class, 'store']);
 
-
-
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::post('/wishlist', [WishlistController::class, 'store']);
+    Route::delete('/wishlist/{productId}', [WishlistController::class, 'destroy']);
