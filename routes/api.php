@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\WishlistController;
@@ -60,6 +61,7 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delet
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::post('/categories', [CategoryController::class, 'store']);
 
-    Route::get('/wishlist', [WishlistController::class, 'index']);
-    Route::post('/wishlist', [WishlistController::class, 'store']);
-    Route::delete('/wishlist/{productId}', [WishlistController::class, 'destroy']);
+Route::post('/cart', [CartController::class, 'addToCart']);
+Route::get('/cart/{customer_id}', [CartController::class, 'index']);
+Route::get('/cart/{userId}', [CartController::class, 'getCartItems']);
+Route::delete('/cart/{id}', [CartController::class, 'destroy']);
