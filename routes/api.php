@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\AdminStatsController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
@@ -28,8 +29,13 @@ Route::get('/users', function () {
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return response()->json(['message' => 'Welcome Admin']);
+
     });
+    // Route::get('/admin/stats', [AdminStatsController::class, 'index']);
+
 });
+    Route::get('admin/stats',[AdminStatsController::class,'index']);
+
 
 Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
     Route::get('/seller/dashboard', function () {
@@ -65,3 +71,7 @@ Route::post('/cart', [CartController::class, 'addToCart']);
 Route::get('/cart/{customer_id}', [CartController::class, 'index']);
 Route::get('/cart/{userId}', [CartController::class, 'getCartItems']);
 Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+
+Route::get('/wishlist', [WishlistController::class, 'index']);
+Route::post('/wishlist', [WishlistController::class, 'store']);
+Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
