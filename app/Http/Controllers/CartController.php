@@ -41,6 +41,15 @@ public function index($customer_id)
     return response()->json($cartItems);
 }
 
+public function update(Request $request, $id)
+{
+    $cart = Cart::findOrFail($id);
+    $cart->quantity = $request->quantity;
+    $cart->save();
+
+    return response()->json(['message' => 'Quantity updated', 'cart' => $cart]);
+}
+
 public function getCartItems($userId)
 {
     $cartItems = Cart::with('product')
