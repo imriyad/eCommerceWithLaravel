@@ -14,6 +14,44 @@ use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = Order::query();
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where('id', $search)
+                  ->orWhere('status', 'like', "%$search%")
+                  ->orWhereHas('user', function($q) use ($search) {
+                      $q->where('name', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%");
+                  });
+        }
+
+        $orders = $query->with('user')->paginate(20);
+        return response()->json($orders);
+    }
+
+    // Update order status
+    public function update(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+        ]);
+        $order->status = $validated['status'];
+        $order->save();
+
+        return response()->json($order);
+    }
+
+    // Cancel order (soft delete or status change)
+    public function destroy(Order $order)
+    {
+        $order->status = 'cancelled';
+        $order->save();
+
+        return response()->json(['message' => 'Order cancelled']);
+    }
     public function store(Request $request)
     {
         // Validate the request input
