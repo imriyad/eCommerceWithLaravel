@@ -102,29 +102,10 @@ Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
 
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/orders/{id}', [OrderController::class, 'getOrderDetails']);
-
-
 Route::get('/orders', [OrderController::class, 'index']);           // List orders with optional search
-
-
-
 
 Route::patch('/orders/{order}', [OrderController::class, 'update']); // Update order status
 Route::delete('/orders/{order}', [OrderController::class, 'destroy']); // Cancel order
 
-// Route::get('/test-image', function () {
-//     $imageDir = public_path('storage/images');
-//     if (!file_exists($imageDir)) {
-//         mkdir($imageDir, 0777, true);
-//     }
-
-//     $faker = \Faker\Factory::create();
-
-//     try {
-//         $fileName = $faker->image($imageDir, 640, 480, 'product', false);
-//     } catch (\Exception $e) {
-//         return "Error creating image: " . $e->getMessage();
-//     }
-
-//     return "Image created: " . $fileName;
-// });
+Route::post('/orders/buy-now', [OrderController::class, 'buyNow']);
+Route::post('/orders/confirm', [OrderController::class, 'confirmOrder']); // webhook or manual
