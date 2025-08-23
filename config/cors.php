@@ -32,6 +32,6 @@ return [
     'supports_credentials' => true,
 
 
-
+    'allowed_roles' => ['admin', 'seller', 'customer'],
 
 ];

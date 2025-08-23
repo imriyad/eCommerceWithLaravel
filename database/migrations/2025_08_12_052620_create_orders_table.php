@@ -10,9 +10,12 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');  // foreign key to users table
+            $table->unsignedBigInteger('user_id');  
             $table->string('order_number')->unique();
-            $table->enum('status', ['pending', 'processing', 'completed', 'declined', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])
+                ->default('pending');
+
+
             $table->decimal('grand_total', 10, 2);
             $table->integer('item_count');
             $table->enum('payment_method', ['cash_on_delivery', 'paypal', 'card']);

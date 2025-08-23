@@ -5,14 +5,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\AdminStatsController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
 Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisteredUserController::class, 'store'])->name('register');
@@ -109,3 +115,34 @@ Route::delete('/orders/{order}', [OrderController::class, 'destroy']); // Cancel
 
 Route::post('/orders/buy-now', [OrderController::class, 'buyNow']);
 Route::post('/orders/confirm', [OrderController::class, 'confirmOrder']); // webhook or manual
+Route::get('/customer/orders', [OrderController::class, 'getUserOrders']);
+
+
+Route::post('/ai/chat', [AIChatController::class, 'chat']);
+
+
+Route::get('/promotions', [PromotionController::class, 'index']);
+Route::post('/promotions', [PromotionController::class, 'store']);
+Route::put('/promotions/{id}', [PromotionController::class, 'update']);
+Route::delete('/promotions/{id}', [PromotionController::class, 'destroy']);
+Route::get('/promotions/active', [PromotionController::class, 'activePromotions']);
+
+// Route::middleware(['auth:sanctum'])->post('/api/ai/chat', [AIChatController::class, 'chat']);
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->name('password.email');
+
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->name('password.store');
+
+Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
+    ->name('verification.verify');
+
+Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    ->middleware('auth')
+    ->name('verification.send');
+
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
+
+

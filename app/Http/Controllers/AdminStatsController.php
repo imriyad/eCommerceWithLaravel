@@ -13,6 +13,8 @@ class AdminStatsController extends Controller
         $totalProducts=Product::count();
         $totalUsers=User::count();
         $totalOrders=Order::count();
+        $totalOrders = Order::whereIn('status', ['pending', 'processing'])->count();
+
 
         return response()->json([
             'total_products'=>$totalProducts,
