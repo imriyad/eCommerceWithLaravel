@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Http\Request;
 
-class AdminStatsController extends Controller
+class SellerStatsController extends Controller
 {
+   
+
+
     public function index()  {
         $totalProducts=Product::count();
         $totalUsers=User::count();
-        $totalOrders=Order::count();
         $totalOrders = Order::whereIn('status', ['pending', 'processing'])->count();
 
 
@@ -22,6 +24,4 @@ class AdminStatsController extends Controller
             'total_orders'=>$totalOrders,
         ]);
     }
-
 }
-    

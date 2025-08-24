@@ -17,12 +17,12 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 // });
 
 
-Route::middleware('guest')->group(function () {
-    Route::post('/login', [AuthenticatedSessionController::class, 'apiLogin']);
-});
+// Route::middleware('guest')->group(function () {
+//     Route::post('/login', [AuthenticatedSessionController::class, 'apiLogin']);
+// });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/customer/orders', [OrderController::class, 'getUserOrders']);
-});
+// Route::middleware('auth')->group(function () {
+//     Route::get('/customer/orders', [OrderController::class, 'getUserOrders']);
+// });
 
 // require __DIR__.'/auth.php';

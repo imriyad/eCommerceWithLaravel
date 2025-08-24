@@ -83,6 +83,11 @@ public function show($id)
         return response()->json(['message' => 'Product deleted successfully.'], 200);
     }
 
+    public function byCategory($categoryId)
+    {
+        $products = Product::where('category_id', $categoryId)->get();
+        return response()->json($products);
+    }
 
 
 }

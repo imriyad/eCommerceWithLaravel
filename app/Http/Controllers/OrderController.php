@@ -236,6 +236,17 @@ class OrderController extends Controller
     }
 }
 
+    public function getUserOrders(Request $request)
+    {
+        $user = auth()->user();
+        $orders = Order::where('user_id', $user->id)
+            ->with(['items.product'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return response()->json($orders);
+    }
+
 
 }
 

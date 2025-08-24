@@ -70,4 +70,10 @@ public function destroy($id)
 
     return response()->json(['message' => 'Cart item deleted successfully']);
 }
+
+public function getCartCount($customer_id)
+{
+    $count = Cart::where('customer_id', $customer_id)->count();
+    return response()->json(['count' => $count]);
+}
 }

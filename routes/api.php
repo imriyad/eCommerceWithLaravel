@@ -9,6 +9,7 @@ use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\PromotionController;
@@ -61,12 +62,18 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
         return response()->json(['message' => 'Welcome Seller']);
     });
 });
+Route::get('/seller/stats', [\App\Http\Controllers\SellerStatsController::class, 'index']);
 
-Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
-    Route::get('/customer/dashboard', function () {
-        return response()->json(['message' => 'Welcome Customer']);
-    });
-});
+// Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
+//     Route::get('/customer/dashboard', function () {
+//         return response()->json(['message' => 'Welcome Customer']);
+//     });
+  
+// });
+// routes/api.php
+Route::get('customer/dashboard/{id}', [CustomerController::class, 'dashboard']);
+Route::get('/customer/profile/{id}', [\App\Http\Controllers\CustomerController::class, 'profile']);
+Route::get('customer/orders/{id}', [CustomerController::class, 'orders']);
 
 // Public routes for guests, no auth middleware required
 Route::get('/public-info', function () {
@@ -81,6 +88,7 @@ Route::get('/products/{id}', [ProductController::class, 'show']);   // Show sing
 Route::post('/products', [ProductController::class, 'store']);      // Create new product
 Route::put('/products/{id}', [ProductController::class, 'update']); // Update product
 Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete product
+Route::get('/categories/{id}/products', [ProductController::class, 'byCategory']);
 
 
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -92,12 +100,13 @@ Route::get('/cart/{userId}', [CartController::class, 'getCartItems']);
 Route::delete('/cart/{id}', [CartController::class, 'destroy']);
 Route::put('/cart/{id}', [CartController::class, 'update']);
 Route::get('/cart', [CartController::class, 'index']);
-
+Route::get('/cart/{customer_id}/count', [CartController::class, 'getCartCount']);
 
 
 Route::get('/wishlist', [WishlistController::class, 'index']);
 Route::post('/wishlist', [WishlistController::class, 'store']);
 Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
+Route::get('/wishlist/count', [WishlistController::class, 'getCount']);
 
 
 Route::get('/addresses', [AddressController::class, 'index']);

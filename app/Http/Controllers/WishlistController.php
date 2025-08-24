@@ -55,4 +55,11 @@ class WishlistController extends Controller
 
         return response()->json(['message' => 'Removed from wishlist']);
     }
+
+    public function getCount()
+    {
+        $user = Auth::user();
+        $count = Wishlist::where('user_id', $user->id)->count();
+        return response()->json(['count' => $count]);
+    }
 }
