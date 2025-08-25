@@ -20,8 +20,8 @@ class AdminStatsController extends Controller
             'total_products'=>$totalProducts,
             'total_users'=>$totalUsers,
             'total_orders'=>$totalOrders,
+            
         ]);
     }
 
 }
-    

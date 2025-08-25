@@ -1,65 +1,67 @@
 <?php
-// app/Http/Controllers/WishlistController.php
+
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Product;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WishlistController extends Controller
 {
-    // Get wishlist items for the authenticated user
+    // Get logged-in user's wishlist
     public function index()
     {
-        $user = Auth::user();
-        $wishlist = Wishlist::with('product')->where('user_id', $user->id)->get();
-
+        $wishlist = Wishlist::with('product')
+            ->where('user_id', Auth::id())
+            ->get();
         return response()->json($wishlist);
     }
 
     // Add product to wishlist
-    public function store(Request $request)
+    public function store($user_id, $product_id)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id'
-        ]);
+        // validate that product exists
+        $product = Product::findOrFail($product_id);
 
-        $user = Auth::user();
+        // validate that user exists (optional but good practice)
+        $user = User::findOrFail($user_id);
 
-        // Prevent duplicates
-        $exists = Wishlist::where('user_id', $user->id)->where('product_id', $request->product_id)->first();
-        if ($exists) {
-            return response()->json(['message' => 'Product already in wishlist'], 409);
-        }
-
-        $wishlist = Wishlist::create([
+        // create or get wishlist entry
+        $wishlist = Wishlist::firstOrCreate([
             'user_id' => $user->id,
-            'product_id' => $request->product_id,
+            'product_id' => $product->id,
         ]);
 
-        return response()->json(['message' => 'Added to wishlist', 'wishlist' => $wishlist], 201);
+        return response()->json([
+            'message' => 'Product added to wishlist successfully!',
+            'wishlist' => $wishlist
+        ], 201);
     }
 
-    // Remove product from wishlist
-    public function destroy($id)
-    {
-        $user = Auth::user();
 
-        $wishlist = Wishlist::where('user_id', $user->id)->where('product_id', $id)->first();
+    // Remove product from wishlist
+    public function destroy($user_id, $product_id)
+    {
+        $wishlist = Wishlist::where('user_id', $user_id)
+                            ->where('product_id', $product_id)
+                            ->first();
 
         if (!$wishlist) {
-            return response()->json(['message' => 'Item not found in wishlist'], 404);
+            return response()->json(['message' => 'Product not found in wishlist'], 404);
         }
 
         $wishlist->delete();
 
-        return response()->json(['message' => 'Removed from wishlist']);
+        return response()->json(['message' => 'Product removed from wishlist']);
     }
 
-    public function getCount()
+    public function getUserWishlist($user_id)
     {
-        $user = Auth::user();
-        $count = Wishlist::where('user_id', $user->id)->count();
-        return response()->json(['count' => $count]);
+        $wishlist = Wishlist::with('product')
+            ->where('user_id', $user_id)
+            ->get();
+        return response()->json($wishlist);
     }
 }

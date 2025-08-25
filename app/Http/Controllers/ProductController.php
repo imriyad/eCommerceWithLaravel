@@ -4,82 +4,97 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\AdminActivity; // <-- import the activity model
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
-   public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string',
-        'description' => 'nullable|string',
-        'price' => 'required|numeric',
-        'category_id' => 'nullable|exists:categories,id',
-        'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'category_id' => 'nullable|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+        ]);
 
-    $data = $request->all();
+        $data = $request->all();
 
-    // Handle file upload
-    if ($request->hasFile('image')) {
-        $path = $request->file('image')->store('images', 'public');
-        $data['image'] = $path;
+        // Handle file upload
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images', 'public');
+            $data['image'] = $path;
+        }
+
+        $product = Product::create($data);
+
+        // Log admin activity
+        if (Auth::check()) {
+            AdminActivity::create([
+                'admin_id' => Auth::id(),
+                'message' => "Added new product: {$product->name}",
+            ]);
+        }
+
+        return response()->json($product, 201);
     }
 
-    $product = Product::create($data);
-
-    return response()->json($product, 201);
-}
-// public function index()
-// {
-//     return response()->json(Product::paginate(6)); 
-// }
-public function index()
-{
-    return response()->json(Product::all(), 200);
-}
-public function show($id)
-{
-    $product = Product::find($id);
-
-    if (!$product) {
-        return response()->json(['message' => 'Product not found'], 404);
+    public function index()
+    {
+        return response()->json(Product::all(), 200);
     }
 
-    return response()->json($product);
-}
+    public function show($id)
+    {
+        $product = Product::find($id);
 
- // Update product by ID
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        return response()->json($product);
+    }
+
     public function update(Request $request, $id)
     {
-        // Validate request data (adjust rules as needed)
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'brand' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
-            'image' => 'nullable|string', // or handle file upload if needed
+            'image' => 'nullable|string', // handle file if needed
         ]);
 
-        // Find product or fail
         $product = Product::findOrFail($id);
-
-        // Update product fields
         $product->update($validated);
 
-        // Return updated product with 200 status
+        // Log admin activity
+        if (Auth::check()) {
+            AdminActivity::create([
+                'admin_id' => Auth::id(),
+                'message' => "Updated product: {$product->name}",
+            ]);
+        }
+
         return response()->json($product, 200);
     }
 
-    // Delete product by ID
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
-
-        // Delete product
+        $productName = $product->name; // store name before deletion
         $product->delete();
 
-        // Return success message
+        // Log admin activity
+        if (Auth::check()) {
+            AdminActivity::create([
+                'admin_id' => Auth::id(),
+                'message' => "Deleted product: {$productName}",
+            ]);
+        }
+
         return response()->json(['message' => 'Product deleted successfully.'], 200);
     }
 
@@ -88,6 +103,4 @@ public function show($id)
         $products = Product::where('category_id', $categoryId)->get();
         return response()->json($products);
     }
-
-
 }

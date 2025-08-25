@@ -14,6 +14,8 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\AdminStatsController;
+use App\Http\Controllers\AdminActivityController;
+use App\Http\Controllers\SellerActivityController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -31,7 +33,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 Route::get('/users', function () {
-    $users=User::all();
+    $users = User::all();
     return response()->json($users);
 });
 
@@ -39,16 +41,19 @@ Route::get('/users', function () {
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return response()->json(['message' => 'Welcome Admin']);
-
     });
     // Route::get('/admin/stats', [AdminStatsController::class, 'index']);
 
 });
-Route::get('admin/stats',[AdminStatsController::class,'index']);
-Route::get('admin/users',[AdminUserController::class,'index']);
-Route::delete('admin/users/{id}',[AdminUserController::class,'destroy']);
-Route::put('admin/users/{id}',[AdminUserController::class, 'update']);
-Route::post('admin/users',[AdminUserController::class,'store']);
+Route::get('admin/stats', [AdminStatsController::class, 'index']);
+Route::get('admin/users', [AdminUserController::class, 'index']);
+Route::delete('admin/users/{id}', [AdminUserController::class, 'destroy']);
+Route::put('admin/users/{id}', [AdminUserController::class, 'update']);
+Route::post('admin/users', [AdminUserController::class, 'store']);
+Route::get('/admin/recent-activities/{id}', [AdminActivityController::class, 'index']);
+Route::post('/admin/recent-activities', [AdminActivityController::class, 'store']);
+
+
 
 
 // Route::post('/users', [AdminUserController::class, 'store']);  // Create
@@ -63,12 +68,14 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
     });
 });
 Route::get('/seller/stats', [\App\Http\Controllers\SellerStatsController::class, 'index']);
+Route::get('/seller/recent-activities/{id}', [SellerActivityController::class, 'index']);
+Route::post('/seller/recent-activities', [SellerActivityController::class, 'store']);
 
 // Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
 //     Route::get('/customer/dashboard', function () {
 //         return response()->json(['message' => 'Welcome Customer']);
 //     });
-  
+
 // });
 // routes/api.php
 Route::get('customer/dashboard/{id}', [CustomerController::class, 'dashboard']);
@@ -102,11 +109,10 @@ Route::put('/cart/{id}', [CartController::class, 'update']);
 Route::get('/cart', [CartController::class, 'index']);
 Route::get('/cart/{customer_id}/count', [CartController::class, 'getCartCount']);
 
-
 Route::get('/wishlist', [WishlistController::class, 'index']);
-Route::post('/wishlist', [WishlistController::class, 'store']);
-Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy']);
-Route::get('/wishlist/count', [WishlistController::class, 'getCount']);
+Route::post('/wishlist/{user_id}/{product_id}', [WishlistController::class, 'store']);
+Route::delete('/wishlist/{user_id}/{product_id}', [WishlistController::class, 'destroy']);
+Route::get('/wishlist/{user_id}', [WishlistController::class, 'getUserWishlist']);
 
 
 Route::get('/addresses', [AddressController::class, 'index']);
@@ -153,5 +159,3 @@ Route::post('/email/verification-notification', [EmailVerificationNotificationCo
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
-
-

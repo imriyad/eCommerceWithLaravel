@@ -21,11 +21,11 @@ class OrderController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('id', $search)
-                  ->orWhere('status', 'like', "%$search%")
-                  ->orWhereHas('user', function($q) use ($search) {
-                      $q->where('name', 'like', "%$search%")
+                ->orWhere('status', 'like', "%$search%")
+                ->orWhereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
                         ->orWhere('email', 'like', "%$search%");
-                  });
+                });
         }
 
         $orders = $query->with('user')->paginate(20);
@@ -75,20 +75,20 @@ class OrderController extends Controller
 
         try {
             // Create the Order record
-           $order = Order::create([
-    'user_id' => $validated['customer_id'], // This should match your DB column 'user_id'
-    'order_number' => 'ORD-' . strtoupper(Str::random(10)),
-    'status' => 'pending',
-    'grand_total' => $validated['total_amount'],
-    'item_count' => count($validated['items']),
-    'payment_method' => $validated['payment_method'],
-    'payment_status' => $validated['payment_method'] === 'cash_on_delivery' ? 'pending' : 'paid',
-    'name' => $validated['shipping_info']['name'],
-    'email' => $validated['shipping_info']['email'],
-    'address' => $validated['shipping_info']['address'],
-    'city' => $validated['shipping_info']['city'],
-    'postal_code' => $validated['shipping_info']['postal_code'],
-]);
+            $order = Order::create([
+                'user_id' => $validated['customer_id'], // This should match your DB column 'user_id'
+                'order_number' => 'ORD-' . strtoupper(Str::random(10)),
+                'status' => 'pending',
+                'grand_total' => $validated['total_amount'],
+                'item_count' => count($validated['items']),
+                'payment_method' => $validated['payment_method'],
+                'payment_status' => $validated['payment_method'] === 'cash_on_delivery' ? 'pending' : 'paid',
+                'name' => $validated['shipping_info']['name'],
+                'email' => $validated['shipping_info']['email'],
+                'address' => $validated['shipping_info']['address'],
+                'city' => $validated['shipping_info']['city'],
+                'postal_code' => $validated['shipping_info']['postal_code'],
+            ]);
 
             // Create each order item
             foreach ($validated['items'] as $item) {
@@ -110,13 +110,11 @@ class OrderController extends Controller
             Mail::to($order->email)->send(new OrderConfirmationMail($order));
 
             return response()->json([
-            'success' => true,
-            'order_id' => $order->id,
-            'order_number' => $order->order_number,
-            'message' => 'Order placed successfully! Confirmation email sent.'
+                'success' => true,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'message' => 'Order placed successfully! Confirmation email sent.'
             ]);
-
-           
         } catch (\Exception $e) {
             // Rollback all DB changes on failure
             DB::rollBack();
@@ -132,9 +130,9 @@ class OrderController extends Controller
                 'message' => 'Order failed: ' . $e->getMessage(),
             ], 500);
         }
-        
     }
 
+    
     public function getOrderDetails($id)
     {
         try {
@@ -155,8 +153,8 @@ class OrderController extends Controller
         }
     }
 
-    
-     public function confirmOrder(Request $request)
+
+    public function confirmOrder(Request $request)
     {
         $order = Order::find($request->order_id);
         if (!$order) return response()->json(['message' => 'Order not found'], 404);
@@ -167,74 +165,73 @@ class OrderController extends Controller
         return response()->json(['message' => 'Order confirmed', 'order' => $order]);
     }
     public function buyNow(Request $request)
-{
-    $request->validate([
-        'product_id' => 'required|exists:products,id',
-        'quantity' => 'required|integer|min:1',
-        'payment_method' => 'required|in:cash_on_delivery,card,paypal', // optional
-    ]);
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+            'payment_method' => 'required|in:cash_on_delivery,card,paypal', // optional
+        ]);
 
-    $product = \App\Models\Product::find($request->product_id);
+        $product = \App\Models\Product::find($request->product_id);
 
-    if ($product->stock < $request->quantity) {
-        return response()->json(['message' => 'Not enough stock'], 400);
+        if ($product->stock < $request->quantity) {
+            return response()->json(['message' => 'Not enough stock'], 400);
+        }
+
+        $totalPrice = $product->price * $request->quantity;
+
+        DB::beginTransaction();
+
+        try {
+            // Create the order
+            $order = Order::create([
+                'user_id' => auth()->id(),
+                'order_number' => 'ORD-' . strtoupper(Str::random(10)),
+                'status' => 'pending',
+                'grand_total' => $totalPrice,
+                'item_count' => $request->quantity,
+                'payment_method' => $request->payment_method,
+                'payment_status' => $request->payment_method === 'cash_on_delivery' ? 'pending' : 'paid',
+                'name' => auth()->user()->name,
+                'email' => auth()->user()->email,
+                'address' => '', // optional, can be updated later
+                'city' => '',
+                'postal_code' => '',
+            ]);
+
+            // Create order item
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'quantity' => $request->quantity,
+                'price' => $product->price,
+            ]);
+
+            // Reduce product stock
+            $product->stock -= $request->quantity;
+            $product->save();
+
+            DB::commit();
+
+            // Send confirmation email
+            Mail::to($order->email)->send(new OrderConfirmationMail($order));
+
+            return response()->json([
+                'success' => true,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'message' => 'Order placed successfully! Confirmation email sent.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Buy Now order failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Order failed: ' . $e->getMessage(),
+            ], 500);
+        }
     }
-
-    $totalPrice = $product->price * $request->quantity;
-
-    DB::beginTransaction();
-
-    try {
-        // Create the order
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'order_number' => 'ORD-' . strtoupper(Str::random(10)),
-            'status' => 'pending',
-            'grand_total' => $totalPrice,
-            'item_count' => $request->quantity,
-            'payment_method' => $request->payment_method,
-            'payment_status' => $request->payment_method === 'cash_on_delivery' ? 'pending' : 'paid',
-            'name' => auth()->user()->name,
-            'email' => auth()->user()->email,
-            'address' => '', // optional, can be updated later
-            'city' => '',
-            'postal_code' => '',
-        ]);
-
-        // Create order item
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'quantity' => $request->quantity,
-            'price' => $product->price,
-        ]);
-
-        // Reduce product stock
-        $product->stock -= $request->quantity;
-        $product->save();
-
-        DB::commit();
-
-        // Send confirmation email
-        Mail::to($order->email)->send(new OrderConfirmationMail($order));
-
-        return response()->json([
-            'success' => true,
-            'order_id' => $order->id,
-            'order_number' => $order->order_number,
-            'message' => 'Order placed successfully! Confirmation email sent.'
-        ]);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Buy Now order failed: ' . $e->getMessage());
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Order failed: ' . $e->getMessage(),
-        ], 500);
-    }
-}
 
     public function getUserOrders(Request $request)
     {
@@ -246,8 +243,4 @@ class OrderController extends Controller
 
         return response()->json($orders);
     }
-
-
 }
-
-
