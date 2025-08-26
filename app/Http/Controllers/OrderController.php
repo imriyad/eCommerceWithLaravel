@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Spatie\Permission\Exceptions\WildcardPermissionInvalidArgument;
 
 class OrderController extends Controller
 {
@@ -52,9 +53,9 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Order cancelled']);
     }
+
     public function store(Request $request)
     {
-        // Validate the request input
         $validated = $request->validate([
             'customer_id' => 'required|exists:users,id',
             'shipping_info.name' => 'required|string|max:255',
@@ -91,6 +92,7 @@ class OrderController extends Controller
             ]);
 
             // Create each order item
+            // Create each order item and decrease stock
             foreach ($validated['items'] as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -98,10 +100,20 @@ class OrderController extends Controller
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                 ]);
+
+                // Decrease stock quantity of the product
+                $product = \App\Models\Product::find($item['product_id']);
+                if ($product) {
+                    if ($product->stock < $item['quantity']) {
+                        // If not enough stock, rollback immediately
+                        throw new \Exception("Not enough stock for product: {$product->name}");
+                    }
+                    $product->decrement('stock', $item['quantity']);
+                }
             }
 
+
             // Clear the cart for the customer
-            // Cart::where('user_id', $validated['customer_id'])->delete();
             Cart::where('customer_id', $validated['customer_id'])->delete();
 
 
@@ -132,7 +144,7 @@ class OrderController extends Controller
         }
     }
 
-    
+
     public function getOrderDetails($id)
     {
         try {
@@ -169,13 +181,16 @@ class OrderController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash_on_delivery,card,paypal', // optional
+            'payment_method' => 'required|in:cash_on_delivery,card,paypal',
         ]);
 
         $product = \App\Models\Product::find($request->product_id);
 
-        if ($product->stock < $request->quantity) {
-            return response()->json(['message' => 'Not enough stock'], 400);
+        if ($product) {
+            if ($product->stock < $product['quantity']) {
+                throw new \Exception("Not enough stock for product: {$product->name}");
+            }
+            $product->decrement('stock', $product['quantity']);
         }
 
         $totalPrice = $product->price * $request->quantity;
@@ -232,7 +247,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
     public function getUserOrders(Request $request)
     {
         $user = auth()->user();

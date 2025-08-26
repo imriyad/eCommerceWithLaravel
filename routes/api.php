@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
@@ -37,13 +38,10 @@ Route::get('/users', function () {
     return response()->json($users);
 });
 
-
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return response()->json(['message' => 'Welcome Admin']);
     });
-    // Route::get('/admin/stats', [AdminStatsController::class, 'index']);
-
 });
 Route::get('admin/stats', [AdminStatsController::class, 'index']);
 Route::get('admin/users', [AdminUserController::class, 'index']);
@@ -52,15 +50,6 @@ Route::put('admin/users/{id}', [AdminUserController::class, 'update']);
 Route::post('admin/users', [AdminUserController::class, 'store']);
 Route::get('/admin/recent-activities/{id}', [AdminActivityController::class, 'index']);
 Route::post('/admin/recent-activities', [AdminActivityController::class, 'store']);
-
-
-
-
-// Route::post('/users', [AdminUserController::class, 'store']);  // Create
-// Route::get('/users/{id}', [AdminUserController::class, 'show']); // Read single
-// Route::put('/users/{id}', [AdminUserController::class, 'update']); // Update
-// Route::delete('/users/{id}', [AdminUserController::class, 'destroy']); // Delete
-
 
 Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
     Route::get('/seller/dashboard', function () {
@@ -71,13 +60,6 @@ Route::get('/seller/stats', [\App\Http\Controllers\SellerStatsController::class,
 Route::get('/seller/recent-activities/{id}', [SellerActivityController::class, 'index']);
 Route::post('/seller/recent-activities', [SellerActivityController::class, 'store']);
 
-// Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
-//     Route::get('/customer/dashboard', function () {
-//         return response()->json(['message' => 'Welcome Customer']);
-//     });
-
-// });
-// routes/api.php
 Route::get('customer/dashboard/{id}', [CustomerController::class, 'dashboard']);
 Route::get('/customer/profile/{id}', [\App\Http\Controllers\CustomerController::class, 'profile']);
 Route::get('customer/orders/{id}', [CustomerController::class, 'orders']);
@@ -87,8 +69,6 @@ Route::get('/public-info', function () {
     return response()->json(['message' => 'Welcome Guest']);
 });
 
-//Route::middleware('auth:sanctum')->post('/products', [ProductController::class, 'store']);
-
 // Product Routes
 Route::get('/products', [ProductController::class, 'index']);       // List all products
 Route::get('/products/{id}', [ProductController::class, 'show']);   // Show single product
@@ -96,7 +76,6 @@ Route::post('/products', [ProductController::class, 'store']);      // Create ne
 Route::put('/products/{id}', [ProductController::class, 'update']); // Update product
 Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete product
 Route::get('/categories/{id}/products', [ProductController::class, 'byCategory']);
-
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::post('/categories', [CategoryController::class, 'store']);
@@ -114,12 +93,10 @@ Route::post('/wishlist/{user_id}/{product_id}', [WishlistController::class, 'sto
 Route::delete('/wishlist/{user_id}/{product_id}', [WishlistController::class, 'destroy']);
 Route::get('/wishlist/{user_id}', [WishlistController::class, 'getUserWishlist']);
 
-
 Route::get('/addresses', [AddressController::class, 'index']);
 Route::post('/addresses', [AddressController::class, 'store']);
 Route::put('/addresses/{id}', [AddressController::class, 'update']);
 Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
-
 
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/orders/{id}', [OrderController::class, 'getOrderDetails']);
@@ -132,17 +109,13 @@ Route::post('/orders/buy-now', [OrderController::class, 'buyNow']);
 Route::post('/orders/confirm', [OrderController::class, 'confirmOrder']); // webhook or manual
 Route::get('/customer/orders', [OrderController::class, 'getUserOrders']);
 
-
 Route::post('/ai/chat', [AIChatController::class, 'chat']);
-
 
 Route::get('/promotions', [PromotionController::class, 'index']);
 Route::post('/promotions', [PromotionController::class, 'store']);
 Route::put('/promotions/{id}', [PromotionController::class, 'update']);
 Route::delete('/promotions/{id}', [PromotionController::class, 'destroy']);
 Route::get('/promotions/active', [PromotionController::class, 'activePromotions']);
-
-// Route::middleware(['auth:sanctum'])->post('/api/ai/chat', [AIChatController::class, 'chat']);
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
     ->name('password.email');
@@ -159,3 +132,6 @@ Route::post('/email/verification-notification', [EmailVerificationNotificationCo
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
+    
+Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
+Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook']);
