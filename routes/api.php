@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AIChatController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -135,3 +136,15 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     
 Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
 Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook']);
+Route::post('/reviews/{userId}/{productId}', [ReviewController::class, 'store']);
+Route::get('/reviews/product/{product_id}', [ReviewController::class, 'getProductReviews']);
+
+
+
+
+
+
+Route::get('/reviews/user/{user_id}', [ReviewController::class, 'getUserReviews']);
+Route::get('/reviews', [ReviewController::class, 'index']);
+Route::put('/reviews/{id}', [ReviewController::class, 'update']);
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);

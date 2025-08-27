@@ -45,6 +45,31 @@ class ProductController extends Controller
         return response()->json(Product::all(), 200);
     }
 
+    // public function index()
+    // {
+    //     $products = Product::withCount('reviews')
+    //         ->withAvg('reviews', 'rating')
+    //         ->get(); // paginate 10 items per page
+
+    //     // Ensure default values
+    //     $products->getCollection()->transform(function ($product) {
+    //         $product->reviews_count = $product->reviews_count ?? 0;
+    //         $product->reviews_avg_rating = $product->reviews_avg_rating ?? 0;
+    //         return $product;
+    //     });
+
+    //     // Return paginated response with metadata
+    //     return response()->json([
+    //         'data' => $products->items(),        // actual products
+    //         'current_page' => $products->currentPage(),
+    //         'last_page' => $products->lastPage(),
+    //         'per_page' => $products->perPage(),
+    //         'total' => $products->total(),
+    //     ], 200);
+    // }
+
+
+
     public function show($id)
     {
         $product = Product::find($id);
