@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\AdminActivity; // <-- import the activity model
+use App\Models\AdminActivity; 
 use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
@@ -21,7 +21,6 @@ class ProductController extends Controller
 
         $data = $request->all();
 
-        // Handle file upload
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('images', 'public');
             $data['image'] = $path;
@@ -29,7 +28,6 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
-        // Log admin activity
         if (Auth::check()) {
             AdminActivity::create([
                 'admin_id' => Auth::id(),
