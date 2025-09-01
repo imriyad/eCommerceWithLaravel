@@ -4,8 +4,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\PaymentController;
@@ -110,7 +110,6 @@ Route::post('/orders/buy-now', [OrderController::class, 'buyNow']);
 Route::post('/orders/confirm', [OrderController::class, 'confirmOrder']); // webhook or manual
 Route::get('/customer/orders', [OrderController::class, 'getUserOrders']);
 
-Route::post('/ai/chat', [AIChatController::class, 'chat']);
 
 Route::get('/promotions', [PromotionController::class, 'index']);
 Route::post('/promotions', [PromotionController::class, 'store']);
@@ -139,12 +138,11 @@ Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook']);
 Route::post('/reviews/{userId}/{productId}', [ReviewController::class, 'store']);
 Route::get('/reviews/product/{product_id}', [ReviewController::class, 'getProductReviews']);
 
-
-
-
-
-
 Route::get('/reviews/user/{user_id}', [ReviewController::class, 'getUserReviews']);
 Route::get('/reviews', [ReviewController::class, 'index']);
 Route::put('/reviews/{id}', [ReviewController::class, 'update']);
 Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+
+
+Route::post('/ai/chat', [ChatController::class, 'chat']);
+Route::get('/ai/chat/{sessionId}', [ChatController::class, 'getChatHistory']);
