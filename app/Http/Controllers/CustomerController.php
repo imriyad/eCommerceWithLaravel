@@ -48,7 +48,7 @@ class CustomerController extends Controller
         $reviews = 0; // Implement based on your reviews model
 
         // Loyalty points (if you have a loyalty system)
-        $loyaltyPoints = 0; // Implement based on your loyalty model
+        $loyaltyPoints = 0; 
 
         return [
             'orders' => $totalOrders,
@@ -56,7 +56,8 @@ class CustomerController extends Controller
             'cart' => $cartItems,
             'reviews' => $reviews,
             'totalSpent' => $totalSpent,
-            'loyaltyPoints' => $loyaltyPoints
+            'loyaltyPoints' => $loyaltyPoints            
+
         ];
     }
 

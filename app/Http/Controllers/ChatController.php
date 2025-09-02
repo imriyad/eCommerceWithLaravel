@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use League\CommonMark\Extension\Embed\Bridge\OscaroteroEmbedAdapter;
 
 class ChatController extends Controller
 {
@@ -134,35 +135,59 @@ class ChatController extends Controller
         return false;
     }
 
-    private function isOrderRelated($message)
-    {
-        return preg_match('/\b(order|track|status|delivery|shipment|package|parcel|where is my|when will|tracking number)\b/', $message);
+   private function isOrderRelated($message)
+{
+    static $pattern = null;
+    if ($pattern === null) {
+        $pattern = '/\b(order|track|status|delivery|shipment|package|parcel|where is my|when will|tracking number)\b/i';
     }
+    return preg_match($pattern, $message);
+}
 
-    private function isRecommendationRequest($message)
-    {
-        return preg_match('/\b(recommend|suggest|advise|what\'s good|what\'s popular|best seller|top item|what should i buy|idea|featured|trending)\b/', $message);
+private function isRecommendationRequest($message)
+{
+    static $pattern = null;
+    if ($pattern === null) {
+        $pattern = '/\b(recommend|suggest|advise|what\'s good|what\'s popular|recommend me some product|most popular product|best product|best seller|top item|what should i buy|idea|featured|trending|popular items?|best products?|top products?|show me (?:popular|best)|most popular|what do you recommend|what would you suggest)\b/i';
     }
+    return preg_match($pattern, $message);
+}
 
-    private function isPricingQuestion($message)
-    {
-        return preg_match('/\b(price|cost|how much|expensive|cheap|affordable|discount|sale|offer|promotion|deal)\b/', $message);
+private function isPricingQuestion($message)
+{
+    static $pattern = null;
+    if ($pattern === null) {
+        $pattern = '/\b(price|cost|how much|expensive|cheap|affordable|discount|sale|offer|promotion|deal|pricing|rates?)\b/i';
     }
+    return preg_match($pattern, $message);
+}
 
-    private function isStockQuestion($message)
-    {
-        return preg_match('/\b(stock|available|in stock|out of stock|quantity|how many left|when restock|backorder)\b/', $message);
+private function isStockQuestion($message)
+{
+    static $pattern = null;
+    if ($pattern === null) {
+        $pattern = '/\b(stock|available|in stock|out of stock|quantity|how many left|when restock|backorder|inventory|supply|availability)\b/i';
     }
+    return preg_match($pattern, $message);
+}
 
-    private function isThankYou($message)
-    {
-        return preg_match('/\b(thanks|thank you|appreciate|grateful|cheers|nice one)\b/', $message);
+private function isThankYou($message)
+{
+    static $pattern = null;
+    if ($pattern === null) {
+        $pattern = '/\b(thanks|thank you|appreciate|grateful|cheers|nice one|thx|ty|thankyou|much appreciated)\b/i';
     }
+    return preg_match($pattern, $message);
+}
 
-    private function isHelpRequest($message)
-    {
-        return preg_match('/\b(help|support|assist|what can you do|how does this work|guide)\b/', $message);
+private function isHelpRequest($message)
+{
+    static $pattern = null;
+    if ($pattern === null) {
+        $pattern = '/\b(help|support|assist|what can you do|how does this work|guide|instructions|faq|help me|need help|customer service)\b/i';
     }
+    return preg_match($pattern, $message);
+}
 
     // Response handling methods
     private function handleGreeting($message)
@@ -234,7 +259,6 @@ class ChatController extends Controller
                 $matchedProducts[] = $product;
             }
         }
-        
         // Search by brand
         if (empty($matchedProducts)) {
             $brands = Product::where('is_active', 1)->distinct()->pluck('brand');
@@ -248,7 +272,7 @@ class ChatController extends Controller
                 }
             }
         }
-        
+     
         if (!empty($matchedProducts)) {
             $response = "";
             foreach ($matchedProducts as $product) {
@@ -263,6 +287,7 @@ class ChatController extends Controller
                 $response .= "Would you like to know more about this product?";
             } else {
                 $response .= "Which product would you like more details about?";
+                
             }
             
             return $response;
