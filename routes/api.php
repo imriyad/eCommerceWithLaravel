@@ -10,6 +10,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\WishlistController;
@@ -30,7 +31,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login');
 });
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+Route::middleware(['auth'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
@@ -39,20 +40,22 @@ Route::get('/users', function () {
     return response()->json($users);
 });
 
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return response()->json(['message' => 'Welcome Admin']);
     });
 });
-Route::get('admin/stats', [AdminStatsController::class, 'index']);
-Route::get('admin/users', [AdminUserController::class, 'index']);
-Route::delete('admin/users/{id}', [AdminUserController::class, 'destroy']);
-Route::put('admin/users/{id}', [AdminUserController::class, 'update']);
-Route::post('admin/users', [AdminUserController::class, 'store']);
+Route::get('/admin/stats', [AdminStatsController::class, 'index']);
+Route::get('/admin/users', [AdminUserController::class, 'index']);
+Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy']);
+Route::put('/admin/users/{id}', [AdminUserController::class, 'update']);
+Route::post('/admin/users', [AdminUserController::class, 'store']);
 Route::get('/admin/recent-activities/{id}', [AdminActivityController::class, 'index']);
 Route::post('/admin/recent-activities', [AdminActivityController::class, 'store']);
 
-Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
+Route::middleware(['auth', 'role:seller'])->group(function () {
     Route::get('/seller/dashboard', function () {
         return response()->json(['message' => 'Welcome Seller']);
     });
@@ -63,7 +66,20 @@ Route::post('/seller/recent-activities', [SellerActivityController::class, 'stor
 
 Route::get('customer/dashboard/{id}', [CustomerController::class, 'dashboard']);
 Route::get('/customer/profile/{id}', [\App\Http\Controllers\CustomerController::class, 'profile']);
+
+
+// routes/api.php
+
+  Route::post('/customer/profile/{id}', [CustomerController::class, 'updateProfile']);
+Route::post('/customer/change-password/{id}', [CustomerController::class, 'changePassword']);
+
+
+
+// Route::put('/admin/users/{id}', [AdminUserController::class, 'update']);
+
 Route::get('customer/orders/{id}', [CustomerController::class, 'orders']);
+Route::get('customer/recommended/{id}', [CustomerController::class, 'recommendedProducts']);
+
 
 // Public routes for guests, no auth middleware required
 Route::get('/public-info', function () {
@@ -143,6 +159,9 @@ Route::get('/reviews', [ReviewController::class, 'index']);
 Route::put('/reviews/{id}', [ReviewController::class, 'update']);
 Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
 
-
 Route::post('/ai/chat', [ChatController::class, 'chat']);
 Route::get('/ai/chat/{sessionId}', [ChatController::class, 'getChatHistory']);
+
+Route::get('/profile/{id}', [ProfileController::class, 'show']);
+Route::put('/profile/{id}', [ProfileController::class, 'update']);
+Route::post('/profile/{id}/upload-image', [ProfileController::class, 'uploadImage']);

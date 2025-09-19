@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
 
 class CustomerController extends Controller
 {
@@ -26,6 +28,7 @@ class CustomerController extends Controller
             'recentlyViewed' => $recentlyViewed
         ]);
     }
+
 
 
     private function getCustomerStats($userId)
@@ -48,7 +51,7 @@ class CustomerController extends Controller
         $reviews = 0; // Implement based on your reviews model
 
         // Loyalty points (if you have a loyalty system)
-        $loyaltyPoints = 0; 
+        $loyaltyPoints = 0; // Implement based on your loyalty model
 
         return [
             'orders' => $totalOrders,
@@ -56,8 +59,7 @@ class CustomerController extends Controller
             'cart' => $cartItems,
             'reviews' => $reviews,
             'totalSpent' => $totalSpent,
-            'loyaltyPoints' => $loyaltyPoints            
-
+            'loyaltyPoints' => $loyaltyPoints
         ];
     }
 
@@ -102,15 +104,65 @@ class CustomerController extends Controller
         $user = User::findOrFail($id);
         return response()->json($user);
     }
-    
+
     public function orders($id)
-{
-    $orders = Order::where('user_id', $id)
-        ->with('items.product')
-        ->orderBy('created_at', 'desc')
-        ->get();
+    {
+        $orders = Order::where('user_id', $id)
+            ->with('items.product')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    return response()->json(['orders' => $orders]);
-}
 
+        return response()->json(['orders' => $orders]);
+    }
+
+    public function changePassword(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8',
+        ]);
+
+        // Check current password
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Current password is incorrect'
+            ], 400);
+        }
+
+        // Update password
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        return response()->json(['message' => 'Password changed successfully']);
+    }
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Update name
+        $user->name = $validated['name'];
+
+        // Handle profile picture upload (if exists)
+        if ($request->hasFile('profile_picture')) {
+            $file = $request->file('profile_picture');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/profile_pictures'), $fileName);
+            $user->profile_picture = 'uploads/profile_pictures/' . $fileName;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'customer' => $user
+        ]);
+    }
 }
